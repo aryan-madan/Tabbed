@@ -97,7 +97,7 @@ export default function Home() {
     return (
         <main className={s.main}>
             <div className={s.hint}>
-                <kbd>W/S</kbd> Select Menu • <kbd>Enter</kbd> Confirm
+                <kbd>W/S</kbd> Navigate • <kbd>Enter</kbd> Confirm
             </div>
 
             <a href="https://hackclub.com/" target="_blank" rel="noopener noreferrer" className={`${s.logo} ${s.reveal}`} tabIndex={0}>
