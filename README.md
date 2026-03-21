@@ -16,19 +16,19 @@ it will have different project tiers.
 
 ## tiers
 
-1. tier 1 - simple projects and websites
-2. tier 2 - multi-page websites and simple apps
-3. tier 3 - complex websites or apps with apis and integrations
-4. tier 4 - full applications with unique keyboard functionality
-5. tier 5 - truly exceptional and rare projects
+1. tier 1 - simple projects and websites (3-5 hours)
+2. tier 2 - multi-page websites and simple apps (6-10 hours)
+3. tier 3 - complex websites or apps with apis and integrations (11-20 hours)
+4. tier 4 - full applications with unique keyboard functionality (21-60 hours)
+5. tier 5 - truly exceptional and rare projects (61+ hours)
 
 based on these tiers, you'll be eligible for different grants. (inspired by blueprint)
 
-tier 1 - $10
-tier 2 - $25
-tier 3 - $50
-tier 4 - $100
-tier 5 - $200
+1. tier 1 - $10
+2. tier 2 - $25
+3. tier 3 - $50
+4. tier 4 - $100
+5. tier 5 - $200
 
 ## marketplace
 
@@ -52,4 +52,4 @@ we were deliberating between commmunity voting and having reviewers (like in blu
 6. the project is not plagiarized.
 7. the project is not a copy of another project.
 
-much love, aryan and rudransh
+much love, aryan and rudransh <3
