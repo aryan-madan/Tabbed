@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TABBED",
-  description: "build something keyboard-only. get a keyboard grant.",
+  title: "TABBED - hackclub ysws",
+  description: "build something keyboard-only, get a keyboard grant.",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
