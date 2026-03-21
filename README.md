@@ -51,3 +51,5 @@ we were deliberating between commmunity voting and having reviewers (like in blu
 5. the project is built within the hackathon period.
 6. the project is not plagiarized.
 7. the project is not a copy of another project.
+
+much love, aryan and rudransh
