@@ -10,11 +10,11 @@ const steps = [
 ];
 
 const faqs = [
-    { q: "what counts as keyboard-only?", a: "your project should be fully usable without a mouse or touch input. arrow keys, tab, shortcuts, vim bindings, all good. no mouse scrolling allowed either. if you need to click or scroll with a trackpad, it doesn't count." },
+    { q: "what counts as keyboard-only?", a: "your project should be fully usable without a mouse or touch input. arrow keys, shortcuts, vim bindings, all good. no mouse scrolling allowed either. you cannot use the tab key for any navigation. if you need to click or scroll with a trackpad, it doesn't count." },
     { q: "what can i build?", a: "literally anything, a code editor, a game, a music player, a weird interactive poem. as long as it works with just the keyboard." },
     { q: "who can apply?", a: "teens 18 and under. that's the only hard rule." },
     { q: "what's the deadline?", a: "rolling. submit whenever you ship. there's no hard cutoff." },
-    { q: "how does the grant work?", a: "once your project is approved, we send you the grant money and you buy the keyboard yourself. up to $200." },
+    { q: "how does the grant work?", a: "once your project is approved, we send you the grant money and you buy the keyboard yourself or you pick a prebuilt from our marketplace. up to $200." },
     { q: "does it have to be a web project?", a: "it should be something people can try online, so a web app or site works best. if you have another idea, ask us in #tabbed on the hack club slack." },
 ];
 
