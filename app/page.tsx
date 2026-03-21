@@ -140,7 +140,7 @@ export default function Home() {
                     </div>
                     <div className={s.path}>
                         {steps.map(({ n, name, info }, i) => (
-                            <div key={n} className={`${s.step} ${s.reveal}`} style={{ transitionDelay: `${i * 0.15}s` }}>
+                            <div key={n} className={`${s.step} ${s.reveal}`} style={{ transitionDelay: `${i * 0.15}s` }} tabIndex={0}>
                                 <div className={s.skeycap}>
                                     <span className={s.num}>{n}</span>
                                 </div>
@@ -163,7 +163,6 @@ export default function Home() {
                         {faqs.map(({ q, a }, i) => (
                             <div key={i} className={s.reveal} style={{ transitionDelay: `${i * 0.1}s` }}>
                                 <details className={s.ask} tabIndex={0} data-focus="true">
-                                    {/* Moved tabIndex=0 to the Details container so the outline covers EVERYTHING inside it! */}
                                     <summary className={s.q}>{q}</summary>
                                     <p className={s.a}>{a}</p>
                                 </details>
