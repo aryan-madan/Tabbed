@@ -9,10 +9,13 @@ const steps: Phase[] = [
 
 export default function How() {
   return (
-    <section className="bg-cream px-10 py-28 sm:px-24">
-      <h2 className="mb-14 text-center font-display text-6xl font-bold text-ink">How It Works</h2>
-      <div className="grid gap-8 sm:grid-cols-3">
-        {steps.map(step => <Step key={step.num} step={step} />)}
+    <section className="flex flex-col items-center gap-20 bg-cream px-10 py-28 sm:px-24">
+      <h2 className="font-display text-6xl font-bold text-ink">How It Works</h2>
+      <div className="relative flex w-full max-w-3xl flex-col gap-24">
+        <svg className="absolute inset-0 z-0 hidden h-full w-full sm:block" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path d="M 30 10 C 70 25, 10 25, 70 50 C 110 65, 10 65, 30 90" fill="none" stroke="var(--color-ink)" strokeOpacity="0.35" strokeWidth="5.5" strokeDasharray="5.5 5.5" vectorEffect="non-scaling-stroke" />
+        </svg>
+        {steps.map((step, i) => <Step key={step.num} step={step} flip={i % 2 === 1} />)}
       </div>
     </section>
   )
