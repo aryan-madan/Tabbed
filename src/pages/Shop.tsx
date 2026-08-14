@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useNav } from '../components/Global/Nav'
 
 type Item = { id: number; name: string; descr: string | null; price: number; stock: number; image: string | null; active: boolean }
 type User = { name: string | null; hours: number; admin: boolean } | null
 type Order = { id: number; name: string; price: number; created: string }
+type AdminUser = { slack_id: string; name: string | null; email: string | null; hours: number; admin: boolean }
 
 const api = import.meta.env.VITE_API || ''
 
@@ -62,15 +64,24 @@ function AdminForm({ onAdd }: { onAdd: (evt: FormEvent<HTMLFormElement>) => void
 }
 
 export default function Shop() {
+  const location = useLocation()
+  const navigate = useNavigate()
   const [items, setitems] = useState<Item[]>([])
   const [user, setuser] = useState<User>(null)
   const [orders, setorders] = useState<Order[]>([])
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([])
   const [view, setview] = useState(location.pathname === '/orders' ? 'orders' : location.pathname === '/admin' ? 'admin' : 'shop')
   const [note, setnote] = useState('')
   const logo = useNav<HTMLButtonElement>()
 
+  useEffect(() => {
+    setview(location.pathname === '/orders' ? 'orders' : location.pathname === '/admin' ? 'admin' : 'shop')
+  }, [location.pathname])
+
   const load = async () => {
-    const [prod, mine] = await Promise.all([fetch(`${api}/api/products`).then(res => res.json()), fetch(`${api}/api/me`).then(res => res.json())])
+    const [prodRes, meRes] = await Promise.all([fetch(`${api}/api/products`), fetch(`${api}/api/me`)])
+    const prod = prodRes.ok ? await prodRes.json() : []
+    const mine = meRes.ok ? await meRes.json() : null
     setitems(prod)
     setuser(mine)
   }
@@ -78,18 +89,28 @@ export default function Shop() {
   useEffect(() => { void load() }, [])
   useEffect(() => {
     if (view === 'orders') fetch(`${api}/api/orders`).then(res => res.ok ? res.json() : []).then(setorders)
-    if (view === 'admin') fetch(`${api}/api/admin`).then(res => res.ok ? res.json() : []).then(setitems)
+    if (view === 'admin') {
+      Promise.all([
+        fetch(`${api}/api/admin`).then(res => res.ok ? res.json() : []),
+        fetch(`${api}/api/admin/users`).then(res => res.ok ? res.json() : []),
+      ]).then(([products, users]) => {
+        setitems(products)
+        setAdminUsers(users)
+      })
+    }
   }, [view])
 
   const go = (val: string) => {
     setview(val)
-    history.pushState({}, '', val === 'shop' ? '/shop' : `/${val}`)
+    navigate(val === 'shop' ? '/shop' : `/${val}`)
   }
+
+  const loginHref = `${api}/login?next=${encodeURIComponent(`${window.location.origin}/shop`)}`
 
   const buy = async (id: number) => {
     const res = await fetch(`${api}/api/buy/${id}`, { method: 'POST' })
     if (res.status === 401) {
-      location.href = `${api}/login?next=/shop`
+      window.location.href = loginHref
       return
     }
     setnote(res.ok ? 'Redeemed successfully.' : 'That item is unavailable.')
@@ -107,6 +128,27 @@ export default function Shop() {
     }
   }
 
+  const adjustHours = async (slackId: string, delta: number) => {
+    const res = await fetch(`${api}/api/admin/users/${encodeURIComponent(slackId)}/hours`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ delta_hours: delta, reason: 'manual admin adjustment' }),
+    })
+
+    if (!res.ok) {
+      setnote('Could not update hours.')
+      return
+    }
+
+    setnote(delta > 0 ? 'Hours added.' : 'Hours removed.')
+    const updated = await fetch(`${api}/api/admin/users`).then(res => res.ok ? res.json() : [])
+    setAdminUsers(updated)
+    if (user) {
+      const nextUser = await fetch(`${api}/api/me`).then(res => res.ok ? res.json() : null)
+      setuser(nextUser)
+    }
+  }
+
   return <div className="min-h-screen bg-cream text-ink">
     <header className="border-b-4 border-ink">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-5">
@@ -118,7 +160,7 @@ export default function Shop() {
             {user.admin && <Tab onClick={() => go('admin')}>admin</Tab>}
             <Link href={`${api}/logout`}>log out</Link>
           </>}
-          {!user && <Link href={`${api}/login?next=/shop`}>Sign in with Slack</Link>}
+          {!user && <Link href={loginHref}>Sign in with Slack</Link>}
         </nav>
       </div>
     </header>
@@ -144,6 +186,39 @@ export default function Shop() {
     {view === 'admin' && <main className="mx-auto max-w-5xl px-6 py-10">
       <h1 className="font-display text-5xl font-black">Run the shop.</h1>
       <AdminForm onAdd={add} />
+
+      <section className="card mt-10 overflow-x-auto p-4">
+        <h2 className="mb-4 font-display text-3xl font-black">Users</h2>
+        <table className="w-full text-left">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Hours</th>
+              <th>Role</th>
+              <th>Adjust</th>
+            </tr>
+          </thead>
+          <tbody>
+            {adminUsers.map(userEntry => (
+              <tr key={userEntry.slack_id}>
+                <td>{userEntry.name || userEntry.slack_id}</td>
+                <td>{userEntry.email || '—'}</td>
+                <td>{userEntry.hours.toFixed(2)}</td>
+                <td>{userEntry.admin ? 'admin' : 'member'}</td>
+                <td>
+                  <div className="flex gap-2">
+                    <button className="press" onClick={() => adjustHours(userEntry.slack_id, -1)}>−1</button>
+                    <button className="press" onClick={() => adjustHours(userEntry.slack_id, 1)}>+1</button>
+                    <button className="press" onClick={() => adjustHours(userEntry.slack_id, 5)}>+5</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {adminUsers.length === 0 && <p className="mt-4 font-bold text-dim">No users found.</p>}
+      </section>
     </main>}
   </div>
 }

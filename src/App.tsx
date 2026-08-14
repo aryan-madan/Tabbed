@@ -15,6 +15,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Guard><Shop /></Guard>} />
+          <Route path="/orders" element={<Guard><Shop /></Guard>} />
+          <Route path="/admin" element={<Guard><Shop /></Guard>} />
         </Routes>
         <Footer />
         <Hint />

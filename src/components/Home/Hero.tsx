@@ -20,7 +20,7 @@ export default function Hero() {
     <section ref={ref} className="relative flex min-h-screen items-center justify-center bg-cream px-10 sm:px-24">
       <a
         ref={login}
-        href={`${api}/login`}
+        href={`${api}/login?next=${encodeURIComponent(`${window.location.origin}/shop`)}`}
         className="absolute right-10 top-8 font-body text-sm font-semibold text-ink transition-opacity hover:opacity-70 sm:right-24 sm:top-10"
       >
       </a>

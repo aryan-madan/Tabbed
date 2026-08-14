@@ -7,16 +7,26 @@ export default function Guard({ children }: { children: React.ReactNode }) {
   const [ok, setok] = useState(false)
 
   useEffect(() => {
+    const next = encodeURIComponent(`${window.location.origin}/shop`)
+
     fetch(`${api}/api/me`)
-      .then(res => res.json())
-      .then(val => {
+      .then(async res => {
+        if (!res.ok) {
+          if (res.status === 401) window.location.href = `${api}/login?next=${next}`
+          setready(true)
+          return null
+        }
+
+        const val = await res.json()
         if (val) {
           setok(true)
-          setready(true)
         } else {
-          location.href = `${api}/login?next=/shop`
+          window.location.href = `${api}/login?next=${next}`
         }
+        setready(true)
+        return val
       })
+      .catch(() => setready(true))
   }, [])
 
   if (!ready || !ok) return null

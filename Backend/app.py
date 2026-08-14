@@ -14,11 +14,21 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET", secrets.token_hex(32))
+frontend = os.environ.get("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 dburl = os.environ["DATABASE"]
 hook = os.environ.get("WEBHOOK", "").strip()
 admins = {val.strip() for val in os.environ.get("ADMINS", "").split(",") if val.strip()}
 db = pool.ThreadedConnectionPool(1, 10, dsn=dburl, cursor_factory=psycopg2.extras.RealDictCursor)
 oauth = OAuth(app)
+
+
+def resolve_redirect(path):
+    path = path or "/"
+    if path.startswith(("http://", "https://")):
+        return path
+    if path.startswith("/"):
+        return f"{frontend}{path}"
+    return f"{frontend}/{path}"
 oauth.register(
     name="hackclub",
     client_id=os.environ["CLIENT"],
@@ -86,7 +96,7 @@ def data(val):
 
 @app.route("/login")
 def signin():
-    session["next"] = request.args.get("next", "/shop")
+    session["next"] = request.args.get("next") or "/shop"
     uri = url_for("callback", _external=True)
     return oauth.hackclub.authorize_redirect(uri)
 
@@ -97,7 +107,7 @@ def callback():
     info = tok.get("userinfo") or oauth.hackclub.userinfo(token=tok)
     sid = info.get("slack_id")
     if not sid:
-        return redirect("/")
+        return redirect(resolve_redirect("/"))
     con = conn()
     cur = con.cursor()
     cur.execute("INSERT INTO users (slack_id, name, email, is_admin) VALUES (%s, %s, %s, %s) ON CONFLICT (slack_id) DO UPDATE SET name = EXCLUDED.name, email = EXCLUDED.email, updated_at = NOW()", (sid, info.get("name"), info.get("email"), sid in admins))
@@ -105,13 +115,13 @@ def callback():
     done(cur)
     db.putconn(con)
     session["slack"] = sid
-    return redirect(session.pop("next", "/"))
+    return redirect(resolve_redirect(session.pop("next", "/shop")))
 
 
 @app.route("/logout")
 def signout():
     session.clear()
-    return redirect("/")
+    return redirect(resolve_redirect("/"))
 
 
 @app.route("/api/products")
@@ -193,6 +203,61 @@ def panel():
     done(cur)
     db.putconn(con)
     return jsonify([data(val) for val in vals])
+
+
+@app.route("/api/admin/users")
+@admin
+def admin_users():
+    con = conn()
+    cur = con.cursor()
+    cur.execute("SELECT slack_id, name, email, hours, is_admin AS admin FROM users ORDER BY name ASC NULLS LAST, slack_id ASC")
+    vals = cur.fetchall()
+    done(cur)
+    db.putconn(con)
+    return jsonify([
+        {
+            "slack_id": val["slack_id"],
+            "name": val["name"],
+            "email": val["email"],
+            "hours": float(val["hours"]),
+            "admin": bool(val["admin"]),
+        }
+        for val in vals
+    ])
+
+
+@app.route("/api/admin/users/<string:slack_id>/hours", methods=["POST"])
+@admin
+def admin_adjust_hours(slack_id):
+    payload = request.get_json(silent=True) or {}
+    try:
+        delta = float(payload.get("delta_hours", 0))
+    except (TypeError, ValueError):
+        return jsonify({"error": "invalid hours delta"}), 400
+
+    if delta == 0:
+        return jsonify({"error": "hours delta must not be zero"}), 400
+
+    reason = (payload.get("reason") or "admin adjustment").strip() or "admin adjustment"
+    adjusted_by = session.get("slack")
+
+    con = conn()
+    cur = con.cursor()
+    try:
+        cur.execute("SELECT slack_id, hours FROM users WHERE slack_id = %s FOR UPDATE", (slack_id,))
+        user = cur.fetchone()
+        if not user:
+            con.rollback()
+            return jsonify({"error": "user not found"}), 404
+
+        new_hours = float(user["hours"]) + delta
+        cur.execute("UPDATE users SET hours = %s, updated_at = NOW() WHERE slack_id = %s", (new_hours, slack_id))
+        cur.execute("INSERT INTO hour_adjustments (slack_id, delta_hours, reason, adjusted_by_slack_id) VALUES (%s, %s, %s, %s)", (slack_id, delta, reason, adjusted_by))
+        con.commit()
+        return jsonify({"ok": True, "hours": new_hours})
+    finally:
+        done(cur)
+        db.putconn(con)
 
 
 if __name__ == "__main__":
