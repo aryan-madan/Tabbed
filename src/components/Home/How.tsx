@@ -2,9 +2,9 @@ import Step from './Step'
 import type { Phase } from './Step'
 
 const steps: Phase[] = [
-  { num: 1, head: 'Build It', text: 'Make any app, site, or game that works entirely through the keyboard.' },
-  { num: 2, head: 'Ship It', text: 'Deploy it somewhere public and send us the link with a short demo video, navigated with a keyboard, obviously.' },
-  { num: 3, head: 'Get It', text: 'We review your project and send you your selected prize!' },
+  { num: 1, head: 'Build It', text: 'Make any app, site, or game that works entirely through the keyboard - no tab key allowed.' },
+  { num: 2, head: 'Ship It', text: 'Deploy it somewhere public and send us the link.' },
+  { num: 3, head: 'Get It', text: 'Get prizes such as cool yummy keyboards, keycaps and keyboard related accessories!' },
 ]
 
 export default function How() {
